@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List
 import pandas as pd
 
 
@@ -10,6 +9,13 @@ class PotionTier(Enum):
     GRAND = 4
     SUPERIOR = 5
     MASTERWORK = 6
+
+
+class PotionStability(Enum):
+    PERFECT = 0
+    VERY_STABLE = 0.1
+    STABLE = 1 / 3
+    UNSTABLE = 0.5
 
 
 starRequirements = pd.DataFrame.from_dict(
@@ -55,6 +61,7 @@ starRequirements = pd.DataFrame.from_dict(
                 960,
                 1040,
                 1125,
+                9999,
             ],
         )
     }
@@ -311,7 +318,7 @@ cauldronProperties = pd.DataFrame.from_dict(
             "maxMagimins": 2000,
         },
     }
-)
+).transpose()
 
 
 class SensoryQuality(Enum):
@@ -4241,3 +4248,5 @@ ingredientData = pd.DataFrame.from_dict(
         },
     }
 )
+
+print(starRequirements)
