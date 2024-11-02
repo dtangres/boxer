@@ -97,6 +97,10 @@ def getBestPotion(
     stability=PotionStability.UNSTABLE,
     starLevel=None,
 ):
+    # Establish common vars
+    workingCauldron = cauldronProperties.loc[cauldron]
+    magiminThresholds = starRequirements.loc["magimins"]
+
     # Declare maximization problem
     prob = None
     if objective == PotionOptimizationObjective.BEST_FOR_GIVEN_TYPE:
@@ -112,9 +116,9 @@ def getBestPotion(
             f"Ingredient_{index.name}",
             cat="Integer",
             lowBound=0,
-            upBound=min(
-                series["quantity"], cauldronProperties.loc[cauldron]["maxIngredients"]
-            ),
+            upBound=workingCauldron["maxIngredients"]
+            if objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH
+            else min(series["quantity"], workingCauldron["maxIngredients"]),
         )
         for index, series in ingredientInventory.iterrows()
     }
@@ -162,7 +166,7 @@ def getBestPotion(
     magiminOff_A = LpVariable(
         "magiminDeviance_A",
         lowBound=0,
-        upBound=cauldronProperties.loc[cauldron]["maxMagimins"],
+        upBound=workingCauldron["maxMagimins"],
         cat="Integer",
     )
     prob += magiminOff_A >= totalMagimins * magiminRatioA - magiminAmount_A
@@ -171,7 +175,7 @@ def getBestPotion(
     magiminOff_B = LpVariable(
         "magiminDeviance_B",
         lowBound=0,
-        upBound=cauldronProperties.loc[cauldron]["maxMagimins"],
+        upBound=workingCauldron["maxMagimins"],
         cat="Integer",
     )
     prob += magiminOff_B >= totalMagimins * magiminRatioB - magiminAmount_B
@@ -180,7 +184,7 @@ def getBestPotion(
     magiminOff_C = LpVariable(
         "magiminDeviance_C",
         lowBound=0,
-        upBound=cauldronProperties.loc[cauldron]["maxMagimins"],
+        upBound=workingCauldron["maxMagimins"],
         cat="Integer",
     )
     prob += magiminOff_C >= totalMagimins * magiminRatioC - magiminAmount_C
@@ -189,7 +193,7 @@ def getBestPotion(
     magiminOff_D = LpVariable(
         "magiminDeviance_D",
         lowBound=0,
-        upBound=cauldronProperties.loc[cauldron]["maxMagimins"],
+        upBound=workingCauldron["maxMagimins"],
         cat="Integer",
     )
     prob += magiminOff_D >= totalMagimins * magiminRatioD - magiminAmount_D
@@ -198,7 +202,7 @@ def getBestPotion(
     magiminOff_E = LpVariable(
         "magiminDeviance_E",
         lowBound=0,
-        upBound=cauldronProperties.loc[cauldron]["maxMagimins"],
+        upBound=workingCauldron["maxMagimins"],
         cat="Integer",
     )
     prob += magiminOff_E >= totalMagimins * magiminRatioE - magiminAmount_E
@@ -213,23 +217,22 @@ def getBestPotion(
     # Convert magimin count to star count
     magiminStarVariables = {
         f"magiminStar_{i}": LpVariable(f"magiminStar_{i}", cat="Binary")
-        for i in range(len(starRequirements.loc["magimins"]) - 1)
+        for i in range(len(magiminThresholds) - 1)
     }
-
     magiminStarDummyArray_0 = {
         f"magiminStar_{i}_dummy0": LpVariable(f"magiminStar_{i}_dummy0", cat="Binary")
-        for i in range(len(starRequirements.loc["magimins"]) - 1)
+        for i in range(len(magiminThresholds) - 1)
     }
     magiminStarDummyArray_1 = {
         f"magiminStar_{i}_dummy1": LpVariable(f"magiminStar_{i}_dummy1", cat="Binary")
-        for i in range(len(starRequirements.loc["magimins"]) - 1)
+        for i in range(len(magiminThresholds) - 1)
     }
     for v, t_0, t_1, a, b in zip(
         magiminStarVariables.values(),
         magiminStarDummyArray_0.values(),
         magiminStarDummyArray_1.values(),
-        starRequirements.loc["magimins"].values,
-        starRequirements.loc["magimins"].values[1:],
+        magiminThresholds.values,
+        magiminThresholds.values[1:],
     ):
         prob += a * v <= totalMagimins
         prob += totalMagimins <= (b - 1) * v + M * (1 - v)
@@ -282,8 +285,8 @@ def getBestPotion(
     prob += totalDeviance <= totalMagimins * 0.5
 
     # Specify cauldron constraints
-    prob += totalMagimins <= cauldronProperties.loc[cauldron]["maxMagimins"]
-    prob += ingredientQuantity <= cauldronProperties.loc[cauldron]["maxIngredients"]
+    prob += totalMagimins <= workingCauldron["maxMagimins"]
+    prob += ingredientQuantity <= workingCauldron["maxIngredients"]
     prob += 1 <= ingredientQuantity
 
     starsFromStability = (
@@ -298,61 +301,31 @@ def getBestPotion(
     totalStars = starsFromMagimins + starsFromStability
     prob += sum(magiminStarVariables.values()) == 1
 
-    # # Convert total stars back to binary variables
-    # totalStarsVariables = {
-    #     f"totalStars_{i}": LpVariable(f"totalStars_{i}", cat="Binary")
-    #     for i in range(len(starRequirements.loc["magimins"]) - 1)
-    # }
-    # totalStarsDummyArray_minus = {
-    #     f"totalStars_{i}_dummy_minus": LpVariable(
-    #         f"totalStars_{i}_dummy_minus", cat="Binary"
-    #     )
-    #     for i in range(len(starRequirements.loc["magimins"]) - 1)
-    # }
-    # totalStarsDummyArray_plus = {
-    #     f"totalStars_{i}_dummy_plus": LpVariable(
-    #         f"totalStars_{i}_dummy_plus", cat="Binary"
-    #     )
-    #     for i in range(len(starRequirements.loc["magimins"]) - 1)
-    # }
+    basePotionPrice = lpSum(
+        [
+            v * p
+            for v, p in zip(magiminStarVariables.values(), potionBasePrices[potionType])
+        ]
+    )
 
-    # for i, y in enumerate(
-    #     [
-    #         *zip(
-    #             *map(
-    #                 lambda x: x.values(),
-    #                 [
-    #                     totalStarsDummyArray_minus,
-    #                     totalStarsVariables,
-    #                     totalStarsDummyArray_plus,
-    #                 ],
-    #             ),
-    #         )
-    #     ]
-    # ):
-    #     print(i, y)
-    #     y_n, y_0, y_p = y
-    #     prob += (
-    #         totalStars
-    #         <= (i - 1) * y_n + i * y_0 + len(starRequirements.loc["magimins"]) * y_p
-    #     )
-    #     prob += i * y_0 + (i + 1) * y_p <= totalStars
-    #     prob += y_n + y_0 + y_p == 1
-    # # Linearize the base sale price of the batch
-    # potionSalePrice = lpSum(
-    #     [
-    #         (potionBasePrices[potionType][i]) * totalStarsVariables[f"totalStars_{i}"]
-    #         for i in range(len(totalStarsVariables))
-    #     ]
-    # )
+    ingredientCosts = lpSum(
+        [
+            ingredientData[i]["basePrice"] * inventoryVariables[i]
+            for i in inventoryVariables.keys()
+        ]
+    )
 
     # Fiddle with the objective a bit
     if objective == PotionOptimizationObjective.BEST_FOR_GIVEN_TYPE:
         prob += totalStars  # + ingredientQuantity / 2
     elif objective == PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS:
         prob += starsFromMagimins + starsFromStability >= starLevel
-        prob += totalMagimins - ingredientQuantity / 2
-    # prob.writeMPS("Potion.txt")
+        prob += ingredientCosts  # - basePotionPrice
+    elif objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH:
+        prob += ingredientQuantity == workingCauldron["maxIngredients"]
+        prob += perfectStarBonus == 1
+        prob += basePotionPrice * workingCauldron["maxIngredients"] - ingredientCosts
+    prob.writeMPS("Potion.txt")
     listSolvers(onlyAvailable=True)
     prob.solve()
     if LpStatus[prob.status] == "Optimal":
@@ -406,7 +379,18 @@ def getBestPotion(
         # print(f"{[i.value() for i in magiminStars]=}", sum(i.value() for i in magiminStars))
         # print([i.value() for i in potionStarConstraints[:6]])
         # print(sum((i + 1) * j.value() for i, j in enumerate(magiminStars)))
-        # print(f"{potionSalePrice.value()=}")
+        print(f"{basePotionPrice.value()=}")
+        print(f"Base batch price: {basePotionPrice.value()*ingredientQuantity.value()}")
+        print(f"{ingredientCosts.value()=}")
+        print(
+            f"Base net profit: {basePotionPrice.value()*ingredientQuantity.value()-ingredientCosts.value()}"
+        )
+        print(
+            f"Actual batch price: {potionBasePrices[potionType][totalStars.value()]*ingredientQuantity.value()}"
+        )
+        print(
+            f"Actual net profit: {potionBasePrices[potionType][totalStars.value()]*ingredientQuantity.value()-ingredientCosts.value()}"
+        )
         return prob
     else:
         print("No solution found. Please recheck your inputs.")
@@ -445,6 +429,13 @@ def getOptimumPotionRecipe(
             potionType=potionType,
             objective=objective,
             starLevel=starLevel,
+        )
+    elif objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH:
+        result = getBestPotion(
+            ingredientInventory=ingredientInventory,
+            cauldron=cauldron,
+            potionType=potionType,
+            objective=objective,
         )
     #  print(result)
 
@@ -511,7 +502,7 @@ special_sandbox = pd.DataFrame.from_dict(
             # "Ocean Coast",
             # "Shadow Steppe",
         ]
-        and ingredientData[i]["rarity"] <= 1
+        and ingredientData[i]["rarity"] <= 4
     },
     orient="index",
     columns=["quantity"],
@@ -527,9 +518,9 @@ special_sandbox = pd.DataFrame.from_dict(
 # )
 
 getOptimumPotionRecipe(
-    ingredientInventory=sandbox,
-    cauldron=Cauldron.MAGICAL_WASTELAND_CAULDRON_III,
+    ingredientInventory=special_sandbox,
+    cauldron=Cauldron.CRYSTAL_CAULDRON_III,
     potionType=PotionType.HEALTH_POTION,
-    objective=PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS,
-    starLevel=12,
+    objective=PotionOptimizationObjective.MOST_PROFITABLE_BATCH,
+    starLevel=6,
 )
