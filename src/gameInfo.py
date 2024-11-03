@@ -224,6 +224,183 @@ potionBasePrices = (
 # fmt: on
 
 
+class PotionTier(Enum):
+    MINOR = 1
+    COMMON = 2
+    GREATER = 3
+    GRAND = 4
+    SUPERIOR = 5
+    MASTERWORK = 6
+
+
+# fmt: off
+potionBrewingTimes = pd.DataFrame.from_dict(
+    {
+        PotionType.HEALTH_POTION: {
+            PotionTier.MINOR:       2,
+            PotionTier.COMMON:      4,
+            PotionTier.GREATER:     6,
+            PotionTier.GRAND:       8,
+            PotionTier.SUPERIOR:   11,
+            PotionTier.MASTERWORK: 14,
+        },
+        PotionType.MANA_POTION: {
+            PotionTier.MINOR:       3,
+            PotionTier.COMMON:      5,
+            PotionTier.GREATER:     7,
+            PotionTier.GRAND:       9,
+            PotionTier.SUPERIOR:   12,
+            PotionTier.MASTERWORK: 15,
+        },
+        PotionType.STAMINA_POTION: {
+            PotionTier.MINOR:       4,
+            PotionTier.COMMON:      6,
+            PotionTier.GREATER:     8,
+            PotionTier.GRAND:      10,
+            PotionTier.SUPERIOR:   13,
+            PotionTier.MASTERWORK: 16,
+        },
+        PotionType.SPEED_POTION: {
+            PotionTier.MINOR:       5,
+            PotionTier.COMMON:      7,
+            PotionTier.GREATER:     9,
+            PotionTier.GRAND:      12,
+            PotionTier.SUPERIOR:   15,
+            PotionTier.MASTERWORK: 18,
+        },
+        PotionType.TOLERANCE_POTION: {
+            PotionTier.MINOR:       7,
+            PotionTier.COMMON:      9,
+            PotionTier.GREATER:    11,
+            PotionTier.GRAND:      14,
+            PotionTier.SUPERIOR:   17,
+            PotionTier.MASTERWORK: 21,
+        },
+        PotionType.FIRE_TONIC: {
+            PotionTier.MINOR:       2,
+            PotionTier.COMMON:      4,
+            PotionTier.GREATER:     6,
+            PotionTier.GRAND:       8,
+            PotionTier.SUPERIOR:   11,
+            PotionTier.MASTERWORK: 14,
+        },
+        PotionType.ICE_TONIC: {
+            PotionTier.MINOR:       3,
+            PotionTier.COMMON:      5,
+            PotionTier.GREATER:     7,
+            PotionTier.GRAND:       9,
+            PotionTier.SUPERIOR:   12,
+            PotionTier.MASTERWORK: 15,
+        },
+        PotionType.THUNDER_TONIC: {
+            PotionTier.MINOR:       4,
+            PotionTier.COMMON:      6,
+            PotionTier.GREATER:     8,
+            PotionTier.GRAND:      10,
+            PotionTier.SUPERIOR:   13,
+            PotionTier.MASTERWORK: 16,
+        },
+        PotionType.SHADOW_TONIC: {
+            PotionTier.MINOR:       5,
+            PotionTier.COMMON:      7,
+            PotionTier.GREATER:     9,
+            PotionTier.GRAND:      12,
+            PotionTier.SUPERIOR:   15,
+            PotionTier.MASTERWORK: 18,
+        },
+        PotionType.RADIATION_TONIC: {
+            PotionTier.MINOR:       6,
+            PotionTier.COMMON:      9,
+            PotionTier.GREATER:    11,
+            PotionTier.GRAND:      14,
+            PotionTier.SUPERIOR:   17,
+            PotionTier.MASTERWORK: 19,
+        },
+        PotionType.SIGHT_ENHANCER: {
+            PotionTier.MINOR:       3,
+            PotionTier.COMMON:      5,
+            PotionTier.GREATER:     7,
+            PotionTier.GRAND:       9,
+            PotionTier.SUPERIOR:   12,
+            PotionTier.MASTERWORK: 15,
+        },
+        PotionType.ALERTNESS_ENHANCER: {
+            PotionTier.MINOR:       5,
+            PotionTier.COMMON:      7,
+            PotionTier.GREATER:     9,
+            PotionTier.GRAND:      12,
+            PotionTier.SUPERIOR:   15,
+            PotionTier.MASTERWORK: 18,
+        },
+        PotionType.INSIGHT_ENHANCER: {
+            PotionTier.MINOR:       4,
+            PotionTier.COMMON:      6,
+            PotionTier.GREATER:     8,
+            PotionTier.GRAND:      10,
+            PotionTier.SUPERIOR:   13,
+            PotionTier.MASTERWORK: 16,
+        },
+        PotionType.DOWSING_ENHANCER: {
+            PotionTier.MINOR:       7,
+            PotionTier.COMMON:      9,
+            PotionTier.GREATER:    11,
+            PotionTier.GRAND:      14,
+            PotionTier.SUPERIOR:   17,
+            PotionTier.MASTERWORK: 21,
+        },
+        PotionType.SEEKING_ENHANCER: {
+            PotionTier.MINOR:       9,
+            PotionTier.COMMON:     12,
+            PotionTier.GREATER:    15,
+            PotionTier.GRAND:      18,
+            PotionTier.SUPERIOR:   21,
+            PotionTier.MASTERWORK: 25,
+        },
+        PotionType.POISON_CURE: {
+            PotionTier.MINOR:       2,
+            PotionTier.COMMON:      4,
+            PotionTier.GREATER:     6,
+            PotionTier.GRAND:       8,
+            PotionTier.SUPERIOR:   11,
+            PotionTier.MASTERWORK: 14,
+        },
+        PotionType.DROWSINESS_CURE: {
+            PotionTier.MINOR:       3,
+            PotionTier.COMMON:      5,
+            PotionTier.GREATER:     7,
+            PotionTier.GRAND:       9,
+            PotionTier.SUPERIOR:   12,
+            PotionTier.MASTERWORK: 15,
+        },
+        PotionType.PETRIFICATION_CURE: {
+            PotionTier.MINOR:       4,
+            PotionTier.COMMON:      6,
+            PotionTier.GREATER:     8,
+            PotionTier.GRAND:      10,
+            PotionTier.SUPERIOR:   13,
+            PotionTier.MASTERWORK: 16,
+        },
+        PotionType.SILENCE_CURE: {
+            PotionTier.MINOR:       3,
+            PotionTier.COMMON:      5,
+            PotionTier.GREATER:     7,
+            PotionTier.GRAND:       9,
+            PotionTier.SUPERIOR:   12,
+            PotionTier.MASTERWORK: 15,
+        },
+        PotionType.CURSE_CURE: {
+            PotionTier.MINOR:       5,
+            PotionTier.COMMON:      7,
+            PotionTier.GREATER:     9,
+            PotionTier.GRAND:      12,
+            PotionTier.SUPERIOR:   15,
+            PotionTier.MASTERWORK: 18,
+        },
+    }
+)
+# fmt: on
+
+
 class Cauldron(Enum):
     WOODEN_CAULDRON = 1
     CLAY_CAULDRON = 2
