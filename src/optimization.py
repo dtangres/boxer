@@ -26,9 +26,12 @@ from gameInfo import (
     cauldronProperties,
     Cauldron,
     SensoryQuality,
+    SensoryType,
     ingredientData,
     PotionStability,
     potionBasePrices,
+    AdventureLocation,
+    sensoryAdjectives,
 )
 
 M = 3000
@@ -59,6 +62,7 @@ def assertProblemIsComplete(
     objective=None,
     starLevel=None,
     tier=None,
+    sensoryData=None,
 ):
     testOrComplain(
         ingredientInventory is not None,
@@ -96,6 +100,7 @@ def getBestPotion(
     objective=PotionOptimizationObjective.BEST_FOR_GIVEN_TYPE,
     stability=PotionStability.UNSTABLE,
     starLevel=None,
+    sensoryData=None,
 ):
     # Establish common vars
     workingCauldron = cauldronProperties.loc[cauldron]
@@ -124,6 +129,30 @@ def getBestPotion(
     }
 
     ingredientQuantity = lpSum(inventoryVariables.values())
+
+    # Add sensory constraints
+    for s in sensoryData.keys():
+        if sensoryData[s] not in [SensoryQuality.ANY, SensoryQuality.BAD]:
+            prob += LpConstraint(
+                lpSum(
+                    v
+                    for k, v in inventoryVariables.items()
+                    if ingredientData[k][s] == SensoryQuality.BAD
+                ),
+                sense=LpConstraintEQ,
+                rhs=0,
+                name=f"_Sensory_{s}_MustExclude",
+            )
+            prob += LpConstraint(
+                lpSum(
+                    v
+                    for k, v in inventoryVariables.items()
+                    if ingredientData[k][s] >= sensoryData[s]
+                ),
+                sense=LpConstraintGE,
+                rhs=1,
+                name=f"_Sensory_{s}_MustInclude",
+            )
 
     # Define magimin counts for each type based on ingredients used
     magiminAmount_A = lpSum(
@@ -349,6 +378,24 @@ def getBestPotion(
         # print(f"{stabilityPerfect.value()=}")
         # print(f"{stabilityVeryStable.value()=}")
         # print(f"{stabilityStable.value()=}")
+        for sense in SensoryType:
+            goodCount = badCount = 0
+            for item, amt in inventoryVariables.items():
+                if ingredientData[item][sense] == SensoryQuality.GOOD:
+                    goodCount += amt.value()
+                elif ingredientData[item][sense] == SensoryQuality.BAD:
+                    badCount += amt.value()
+            if goodCount and badCount:
+                totalCount = goodCount + badCount
+                goodFraction = goodCount / totalCount
+                badFraction = badCount / totalCount
+                print(
+                    f"{sense}:\t{goodFraction:.2f} {sensoryAdjectives[sense][SensoryQuality.GOOD]}, {badFraction:.2f} {sensoryAdjectives[sense][SensoryQuality.BAD]}"
+                )
+            elif goodCount:
+                print(f"{sense}:\t{sensoryAdjectives[sense][SensoryQuality.GOOD]}")
+            elif badCount:
+                print(f"{sense}:\t{sensoryAdjectives[sense][SensoryQuality.BAD]}")
         print()
         print(f"{totalMagimins.value()=}")
         # print(f"{totalMagimins*0.1}")
@@ -403,6 +450,7 @@ def getOptimumPotionRecipe(
     objective=PotionOptimizationObjective.BEST_FOR_GIVEN_TYPE,
     starLevel=None,
     tier=None,
+    sensoryData=None,
 ):
     # Validate completeness of parameters
     assertProblemIsComplete(
@@ -412,6 +460,7 @@ def getOptimumPotionRecipe(
         objective=objective,
         starLevel=starLevel,
         tier=tier,
+        sensoryData=sensoryData,
     )
 
     result = None
@@ -421,6 +470,7 @@ def getOptimumPotionRecipe(
             cauldron=cauldron,
             potionType=potionType,
             objective=objective,
+            sensoryData=sensoryData,
         )
     elif objective == PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS:
         result = getBestPotion(
@@ -429,6 +479,7 @@ def getOptimumPotionRecipe(
             potionType=potionType,
             objective=objective,
             starLevel=starLevel,
+            sensoryData=sensoryData,
         )
     elif objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH:
         result = getBestPotion(
@@ -436,6 +487,7 @@ def getOptimumPotionRecipe(
             cauldron=cauldron,
             potionType=potionType,
             objective=objective,
+            sensoryData=sensoryData,
         )
     #  print(result)
 
@@ -495,9 +547,9 @@ special_sandbox = pd.DataFrame.from_dict(
         for i in PotionIngredient
         if ingredientData[i]["zone"]
         in [
-            "Enchanted Forest",
-            "Mushroom Mire",
-            "Bone Wastes",
+            AdventureLocation.ENCHANTED_FOREST,
+            AdventureLocation.MUSHROOM_MIRE,
+            AdventureLocation.BONE_WASTES,
             # "Storm Plains",
             # "Ocean Coast",
             # "Shadow Steppe",
@@ -523,4 +575,11 @@ getOptimumPotionRecipe(
     potionType=PotionType.HEALTH_POTION,
     objective=PotionOptimizationObjective.MOST_PROFITABLE_BATCH,
     starLevel=6,
+    sensoryData={
+        SensoryType.TASTE: SensoryQuality.ANY,
+        SensoryType.VISUAL: SensoryQuality.ANY,
+        SensoryType.AROMA: SensoryQuality.ANY,
+        SensoryType.SENSATION: SensoryQuality.GOOD,
+        SensoryType.SOUND: SensoryQuality.ANY,
+    },
 )
