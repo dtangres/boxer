@@ -1,6 +1,7 @@
 from enum import Enum, IntEnum
 from functools import total_ordering
 import pandas as pd
+from string import ascii_lowercase
 
 
 class PotionTier(IntEnum):
@@ -887,6 +888,24 @@ class IngredientType(Enum):
     PLANT = 12
     PURE_MANA = 13
     SLIME = 14
+
+
+def normalizeName(name):
+    return "".join([i for i in name.lower() if i in ascii_lowercase])
+
+
+ingredientsNormalizedToProper = {
+    normalizeName(i): PotionIngredient[i] for i in PotionIngredient.__members__
+}
+# Custom aliases for ingredients because the internal namespace is a bit funky
+ingredientsNormalizedToProper["sphinxfleas"] = PotionIngredient.SPHINX_FLEA
+ingredientsNormalizedToProper["crocodileteeth"] = PotionIngredient.CROCODILE_TOOTH
+ingredientsNormalizedToProper["mossberry"] = PotionIngredient.MOSS_BERRIES
+ingredientsNormalizedToProper["phoenixtears"] = PotionIngredient.PHOENIX_TEAR
+ingredientsNormalizedToProper["silverstagantlers"] = PotionIngredient.SILVER_STAG_ANTLER
+ingredientsNormalizedToProper["charredonay"] = PotionIngredient.CHARREDONNAY
+
+# print(ingredientsNormalizedToProper)
 
 
 ingredientData = pd.DataFrame.from_dict(
