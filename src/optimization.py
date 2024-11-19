@@ -192,6 +192,18 @@ def getBestPotion(
     magiminRatioD = potionRatios.loc[potionType]["D"] / ratioSum
     magiminRatioE = potionRatios.loc[potionType]["E"] / ratioSum
 
+    # Make sure at least 1 magimin of each required piece is present
+    if magiminRatioA > 0:
+        prob += magiminAmount_A >= 1
+    if magiminRatioB > 0:
+        prob += magiminAmount_B >= 1
+    if magiminRatioC > 0:
+        prob += magiminAmount_C >= 1
+    if magiminRatioD > 0:
+        prob += magiminAmount_D >= 1
+    if magiminRatioE > 0:
+        prob += magiminAmount_E >= 1
+
     magiminOff_A = LpVariable(
         "magiminDeviance_A",
         lowBound=0,
