@@ -34,8 +34,8 @@ from gameInfo import (
     sensoryAdjectives,
 )
 
-M = 3000
-eenyminy = 0.0001
+M = 8000
+eenyminy = 0.00001
 
 
 class PotionOptimizationObjective(Enum):
@@ -272,12 +272,17 @@ def getBestPotion(
     # Convert stability to star bonus
     perfectStarBonus = LpVariable("perfectStarBonus", cat="Binary")
     veryStableStarBonus = LpVariable("veryStableStarBonus", cat="Binary")
+    veryStableStarLowerBoundProduct = LpVariable("veryStableStarProduct", cat="Integer")
     veryStableStarDummy0 = LpVariable("veryStableStarDummy0", cat="Binary")
     veryStableStarDummy1 = LpVariable("veryStableStarDummy1", cat="Binary")
     stableStarBonus = LpVariable("stableStarBonus", cat="Binary")
+    stableStarLowerBoundProduct = LpVariable("stableStarProduct", cat="Integer")
     stableStarDummy0 = LpVariable("stableStarDummy0", cat="Binary")
     stableStarDummy1 = LpVariable("stableStarDummy1", cat="Binary")
     unstableStarPenalty = LpVariable("unstableStarPenalty", cat="Binary")
+    unstableStarLowerBoundProduct = LpVariable("unstableStarProduct", cat="Integer")
+    unstableStarDummy0 = LpVariable("unstableStarDummy0", cat="Binary")
+    unstableStarDummy1 = LpVariable("unstableStarDummy1", cat="Binary")
 
     # Perfect potions require a perfect balance
     prob += totalDeviance <= M * (1 - perfectStarBonus)
@@ -286,24 +291,60 @@ def getBestPotion(
     # Very stable potions require no more than 10% deviance
     lowerBound_veryStable = eenyminy
     upperBound_veryStable = 0.1
-    prob += lowerBound_veryStable * veryStableStarBonus <= totalDeviance
+    prob += veryStableStarLowerBoundProduct <= M * veryStableStarBonus
+    prob += veryStableStarLowerBoundProduct <= totalMagimins * lowerBound_veryStable
+    prob += veryStableStarLowerBoundProduct >= lowerBound_veryStable - M * (
+        1 - veryStableStarBonus
+    )
+    prob += veryStableStarLowerBoundProduct >= 0
+    prob += veryStableStarLowerBoundProduct <= totalDeviance
     prob += totalDeviance <= upperBound_veryStable * totalMagimins + M * (
         1 - veryStableStarBonus
     )
-    prob += totalDeviance - lowerBound_veryStable <= M * veryStableStarDummy0
-    prob += upperBound_veryStable - totalDeviance <= M * veryStableStarDummy1
+    prob += (
+        totalDeviance - (totalMagimins * lowerBound_veryStable)
+        <= M * veryStableStarDummy0
+    )
+    prob += (
+        totalMagimins * upperBound_veryStable
+    ) - totalDeviance <= M * veryStableStarDummy1
     prob += veryStableStarBonus >= veryStableStarDummy0 + veryStableStarDummy1 - 1
 
-    # Stable potions require between 10% and 33% deviance exclusive
+    # Stable potions require between (10% and 30%] deviance
     lowerBound_stable = 0.1 + eenyminy
-    upperBound_stable = (1 / 3) - eenyminy
-    prob += lowerBound_stable * stableStarBonus <= totalDeviance
+    upperBound_stable = 0.30 - eenyminy
+    prob += stableStarLowerBoundProduct <= M * stableStarBonus
+    prob += stableStarLowerBoundProduct <= totalMagimins * lowerBound_stable
+    prob += stableStarLowerBoundProduct >= lowerBound_stable - M * (1 - stableStarBonus)
+    prob += stableStarLowerBoundProduct >= 0
+    prob += stableStarLowerBoundProduct <= totalDeviance
     prob += totalDeviance <= upperBound_stable * totalMagimins + M * (
         1 - stableStarBonus
     )
     prob += totalDeviance - lowerBound_stable <= M * stableStarDummy0
     prob += upperBound_stable - totalDeviance <= M * stableStarDummy1
     prob += stableStarBonus >= stableStarDummy0 + stableStarDummy1 - 1
+
+    # Unstable potions require at most 50% deviance
+    lowerBound_unstable = 0.30
+    upperBound_unstable = 0.5
+    prob += unstableStarLowerBoundProduct <= M * unstableStarPenalty
+    prob += unstableStarLowerBoundProduct <= totalMagimins * lowerBound_unstable
+    prob += unstableStarLowerBoundProduct >= lowerBound_unstable - M * (
+        1 - unstableStarPenalty
+    )
+    prob += unstableStarLowerBoundProduct >= 0
+    prob += unstableStarLowerBoundProduct <= totalDeviance
+    prob += totalDeviance <= upperBound_unstable * totalMagimins + M * (
+        1 - unstableStarPenalty
+    )
+    prob += (
+        totalDeviance - (totalMagimins * lowerBound_unstable) <= M * unstableStarDummy0
+    )
+    prob += (
+        totalMagimins * upperBound_unstable
+    ) - totalDeviance <= M * unstableStarDummy1
+    prob += unstableStarPenalty >= unstableStarDummy0 + unstableStarDummy1 - 1
 
     # Anything else is, of course, unstable
     prob += (
