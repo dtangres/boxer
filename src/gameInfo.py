@@ -768,7 +768,7 @@ class PotionIngredient(Enum):
     DJINN_BLOSSOM = 118
     OGRES_SHADOW = 119
     PHOENIX_TEAR = 120
-    OWLBEAR_PHEREMONES = 121
+    OWLBEAR_PHEROMONES = 121
     DAREDEVIL_PEPPER = 122
     GEODE_CITRUS = 123
     LAZULI_ORE = 124
@@ -3051,8 +3051,8 @@ ingredientData = pd.DataFrame.from_dict(
             "basePrice": 82,
             "zone": AdventureLocation.CRYSTALLINE_FOREST,
         },
-        PotionIngredient.OWLBEAR_PHEREMONES: {
-            "name": "Owlbear Pheremones",
+        PotionIngredient.OWLBEAR_PHEROMONES: {
+            "name": "Owlbear Pheromones",
             "rarity": 2,
             "type": IngredientType.ESSENCE,
             "A": 0,
