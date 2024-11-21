@@ -6,25 +6,19 @@ from pulp import (
     LpMaximize,
     LpMinimize,
     LpConstraint,
-    LpConstraintLE,
     LpConstraintEQ,
     LpConstraintGE,
     LpStatus,
-    value,
-    getSolver,
     lpSum,
-    PULP_CBC_CMD,
     listSolvers,
 )
 
 from gameInfo import (
     PotionIngredient,
-    PotionTier,
     PotionType,
     potionRatios,
     starRequirements,
     cauldronProperties,
-    Cauldron,
     SensoryQuality,
     SensoryType,
     ingredientData,
@@ -60,7 +54,7 @@ def assertProblemIsComplete(
     cauldron=None,
     potionType=None,
     objective=None,
-    starLevel=None,
+    starLevel=0,
     tier=None,
     sensoryData=None,
 ):
@@ -70,6 +64,7 @@ def assertProblemIsComplete(
     )
     testOrComplain(cauldron is not None, "You have to specify a cauldron to brew in!")
     testOrComplain(potionType is not None, "You have to specify a potion type to brew!")
+    print(potionType)
     testOrComplain(
         potionType in PotionType,
         "You have to specify a valid potion type to brew!",
@@ -88,8 +83,8 @@ def assertProblemIsComplete(
         )
     elif objective == PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS:
         testOrComplain(
-            starLevel is not None or tier is not None,
-            "You need to specify at least one of star level or tier!",
+            tier is not None,
+            "You need to specify a tier!",
         )
 
 
@@ -97,7 +92,7 @@ def getBestPotion(
     ingredientInventory=None,
     cauldron=None,
     potionType=None,
-    objective=PotionOptimizationObjective.BEST_FOR_GIVEN_TYPE,
+    objective=PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS,
     stability=PotionStability.UNSTABLE,
     starLevel=None,
     sensoryData=None,
@@ -117,27 +112,27 @@ def getBestPotion(
 
     # Convert inventory dataframe to LpVariables
     inventoryVariables = {
-        index: LpVariable(
-            f"Ingredient_{index.name}",
+        name: LpVariable(
+            f"Ingredient_{name}",
             cat="Integer",
             lowBound=0,
             upBound=workingCauldron["maxIngredients"]
             if objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH
-            else min(series["quantity"], workingCauldron["maxIngredients"]),
+            else min(quantity, workingCauldron["maxIngredients"]),
         )
-        for index, series in ingredientInventory.iterrows()
+        for name, quantity in ingredientInventory.items()
     }
 
     ingredientQuantity = lpSum(inventoryVariables.values())
 
     # Add sensory constraints
     for s in sensoryData.keys():
-        if sensoryData[s] not in [SensoryQuality.ANY, SensoryQuality.BAD]:
+        if sensoryData[s] not in [SensoryQuality.ANY, SensoryQuality.NEGATIVE]:
             prob += LpConstraint(
                 lpSum(
                     v
                     for k, v in inventoryVariables.items()
-                    if ingredientData[k][s] == SensoryQuality.BAD
+                    if ingredientData[k][s] == SensoryQuality.NEGATIVE
                 ),
                 sense=LpConstraintEQ,
                 rhs=0,
@@ -407,105 +402,121 @@ def getBestPotion(
         prob += ingredientQuantity == workingCauldron["maxIngredients"]
         prob += perfectStarBonus == 1
         prob += basePotionPrice * workingCauldron["maxIngredients"] - ingredientCosts
-    prob.writeMPS("Potion.txt")
     listSolvers(onlyAvailable=True)
     prob.solve()
     if LpStatus[prob.status] == "Optimal":
-        print(prob.variables())
-
-        for i, j in inventoryVariables.items():
-            ingredientAmt = int(j.value())
-            if ingredientAmt:
-                print(f"  {ingredientAmt}x {i}")
-
-        for i in "ABCDE":
-            magiminAmt = eval(f"int(magiminAmount_{i}.value())")
-            print(f"    {i}:", [" ", magiminAmt][magiminAmt > 0])
-
-        print(f"{magiminOff_A.value()=}")
-        print(f"{magiminOff_B.value()=}")
-        print(f"{magiminOff_C.value()=}")
-        print(f"{magiminOff_D.value()=}")
-        print(f"{magiminOff_E.value()=}")
-        print()
-        # print(f"{stabilityPerfect.value()=}")
-        # print(f"{stabilityVeryStable.value()=}")
-        # print(f"{stabilityStable.value()=}")
+        solution = {}
+        solution["ingredients"] = {
+            i: int(j.value()) for i, j in inventoryVariables.items() if j.value()
+        }
+        solution["magimins"] = {
+            "A": int(magiminAmount_A.value()),
+            "B": int(magiminAmount_B.value()),
+            "C": int(magiminAmount_C.value()),
+            "D": int(magiminAmount_D.value()),
+            "E": int(magiminAmount_E.value()),
+        }
+        solution["sensory"] = {}
         for sense in SensoryType:
             goodCount = badCount = 0
             for item, amt in inventoryVariables.items():
-                if ingredientData[item][sense] == SensoryQuality.GOOD:
+                if ingredientData[item][sense] == SensoryQuality.POSITIVE:
                     goodCount += amt.value()
-                elif ingredientData[item][sense] == SensoryQuality.BAD:
+                elif ingredientData[item][sense] == SensoryQuality.NEGATIVE:
                     badCount += amt.value()
             if goodCount and badCount:
                 totalCount = goodCount + badCount
                 goodFraction = goodCount / totalCount
                 badFraction = badCount / totalCount
-                print(
-                    f"{sense}:\t{goodFraction:.2f} {sensoryAdjectives[sense][SensoryQuality.GOOD]}, {badFraction:.2f} {sensoryAdjectives[sense][SensoryQuality.BAD]}"
-                )
+                solution["sensory"][sense] = {
+                    "good": goodFraction,
+                    "bad": badFraction,
+                }
             elif goodCount:
-                print(f"{sense}:\t{sensoryAdjectives[sense][SensoryQuality.GOOD]}")
+                solution["sensory"][sense] = {
+                    "good": 1,
+                    "bad": 0,
+                }
             elif badCount:
-                print(f"{sense}:\t{sensoryAdjectives[sense][SensoryQuality.BAD]}")
-        print()
-        print(f"{totalMagimins.value()=}")
-        # print(f"{totalMagimins*0.1}")
-        if totalMagimins.value():
-            print(
-                f"{totalDeviance.value()=}",
-                f"({100 - round(totalDeviance.value() / totalMagimins.value()*100,2)}% stable)",
-            )
-        for index, i in enumerate(magiminStarVariables.values()):
-            if i.value():
-                print(f"Potion stars from magimins: {index*i.value()}")
-        for i, j in zip(
+                solution["sensory"][sense] = {
+                    "good": 0,
+                    "bad": 1,
+                }
+        solution["totalMagimins"] = totalMagimins.value()
+        solution["deviance"] = totalDeviance.value()
+        solution["stability"] = totalDeviance.value() / totalMagimins.value()
+        solution["baseStars"] = sum(
+            ind * i for ind, i in enumerate(magiminStarVariables.values()) if i.value()
+        )
+        stabilityIndex = sum(
             [
-                perfectStarBonus,
-                veryStableStarBonus,
-                stableStarBonus,
-                unstableStarPenalty,
-            ],
-            ["perfect", "very stable", "stable", "unstable"],
-        ):
-            if i.value():
-                print(f"Potion stability: {j}")
-        # for index, i in enumerate(totalStarsVariables.values()):
-        #     if i.value():
-        #         print(f"Total potion stars: {index*i.value()}")
-        print(f"{ingredientQuantity.value()=}")
-        # print("Base star value:", sum(i.value() for i in potionStarVariables))
-        # print(f"{[i.value() for i in magiminStars]=}", sum(i.value() for i in magiminStars))
-        # print([i.value() for i in potionStarConstraints[:6]])
-        # print(sum((i + 1) * j.value() for i, j in enumerate(magiminStars)))
-        print(f"{basePotionPrice.value()=}")
-        print(f"Base batch price: {basePotionPrice.value()*ingredientQuantity.value()}")
-        print(f"{ingredientCosts.value()=}")
-        print(
-            f"Base net profit: {basePotionPrice.value()*ingredientQuantity.value()-ingredientCosts.value()}"
+                ind
+                for ind, i in enumerate(
+                    [
+                        perfectStarBonus,
+                        veryStableStarBonus,
+                        stableStarBonus,
+                        unstableStarPenalty,
+                    ]
+                )
+                if i.value()
+            ]
         )
-        print(
-            f"Actual batch price: {potionBasePrices[potionType][totalStars.value()]*ingredientQuantity.value()}"
+        solution["stabilityRank"] = ["Perfect", "Very Stable", "Stable", "Unstable"][
+            stabilityIndex
+        ]
+        solution["stabilityStars"] = [2, 1, 0, -1][stabilityIndex]
+        solution["totalStars"] = totalStars.value()
+        solution["ingredientsQuantity"] = ingredientQuantity.value()
+        solution["basePotionPrice"] = basePotionPrice.value()
+        solution["ingredientCosts"] = ingredientCosts.value()
+        solution["baseBatchPrice"] = (
+            basePotionPrice.value() * ingredientQuantity.value()
         )
-        print(
-            f"Actual net profit: {potionBasePrices[potionType][totalStars.value()]*ingredientQuantity.value()-ingredientCosts.value()}"
+        solution["baseNetProfit"] = (
+            basePotionPrice.value() * ingredientQuantity.value()
+            - ingredientCosts.value()
         )
-        return prob
-    else:
-        print("No solution found. Please recheck your inputs.")
+        solution["actualBatchPrice"] = (
+            potionBasePrices[potionType][totalStars.value()]
+            * ingredientQuantity.value()
+        )
+        solution["actualNetProfit"] = (
+            potionBasePrices[potionType][totalStars.value()]
+            * ingredientQuantity.value()
+            - ingredientCosts.value()
+        )
+        return solution
 
 
 def getOptimumPotionRecipe(
     ingredientInventory=None,
     cauldron=None,
     potionType=None,
-    objective=PotionOptimizationObjective.BEST_FOR_GIVEN_TYPE,
+    objective=PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS,
     starLevel=None,
     tier=None,
     sensoryData=None,
 ):
     # Validate completeness of parameters
+
+    cauldron = englishToEnum[cauldron]
+    potionType = englishToEnum[potionType]
+    starLevel = int(starLevel) + englishToEnum[tier].value * 6
+    if sensoryData is None:
+        sensoryData = {
+            SensoryType.TASTE: SensoryQuality.ANY,
+            SensoryType.VISUAL: SensoryQuality.ANY,
+            SensoryType.AROMA: SensoryQuality.ANY,
+            SensoryType.SENSATION: SensoryQuality.ANY,
+            SensoryType.SOUND: SensoryQuality.ANY,
+        }
+    else:
+        sensoryData = {
+            englishToEnum[k.title()]: englishToEnum[v] for k, v in sensoryData.items()
+        }
+        print(sensoryData)
+
     assertProblemIsComplete(
         ingredientInventory=ingredientInventory,
         cauldron=cauldron,
