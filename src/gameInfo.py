@@ -4620,4 +4620,34 @@ ingredientData = pd.DataFrame.from_dict(
         },
     }
 )
-print("hahihia", SensoryQuality.NEUTRAL > SensoryQuality.BAD)
+
+
+enumerables = [
+    PotionTier,
+    PotionStability,
+    PotionCategory,
+    PotionType,
+    Cauldron,
+    SensoryQuality,
+    SensoryType,
+    PotionIngredient,
+    IngredientType,
+    AdventureLocation,
+]
+
+enumToEnglish = dict(
+    zip(
+        sum(map(list, enumerables), start=[]),
+        map(
+            titleEnumName,
+            sum(map(lambda x: list(x.__members__.keys()), enumerables), start=[]),
+        ),
+    )
+)
+
+englishToEnum = {j: i for i, j in enumToEnglish.items()}
+# print(englishToEnum)
+
+
+def filterStrings(enumType):
+    return {i: j for i, j in enumToEnglish.items() if i in enumType}
