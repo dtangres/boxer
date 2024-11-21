@@ -1,4 +1,5 @@
-from gameInfo import ingredientsNormalizedToProper, normalizeName
+from gameInfo import ingredientsNormalizedToProper
+from stringManip import normalizeName
 
 
 def read_reagents(filename):

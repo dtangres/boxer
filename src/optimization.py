@@ -31,7 +31,7 @@ from gameInfo import (
     PotionStability,
     potionBasePrices,
     AdventureLocation,
-    sensoryAdjectives,
+    englishToEnum,
 )
 
 M = 8000

@@ -890,10 +890,6 @@ class IngredientType(Enum):
     SLIME = 14
 
 
-def normalizeName(name):
-    return "".join([i for i in name.lower() if i in ascii_lowercase])
-
-
 ingredientsNormalizedToProper = {
     normalizeName(i): PotionIngredient[i] for i in PotionIngredient.__members__
 }
