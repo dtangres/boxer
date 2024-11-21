@@ -41,7 +41,7 @@ class Boxer(toga.App):
                 ][::-1]
                 for r in tableRows:
                     self.ingredientsTable.data.insert(0, r)
-
+            self.adjustColumns()
         except ValueError:
             pass
 
@@ -63,6 +63,10 @@ class Boxer(toga.App):
         )
         print(potionRecipe)
 
+    def adjustColumns(self):
+        self.ingredientsTable._impl.native.get_Columns()[0].set_Width(-1)
+        self.ingredientsTable._impl.native.get_Columns()[1].set_Width(-2)
+
     # Build GUI
     def startup(self):
         # Register font
@@ -80,15 +84,19 @@ class Boxer(toga.App):
         )
 
         # Set up ingredients tab
-        ingredientsTab = toga.Box(
-            style=Pack(direction=COLUMN, padding_top=50, padding=10)
-        )
+        ingredientsTab = toga.Box(style=Pack(flex=1, padding=10))
         self.ingredientsTable = toga.Table(
             headings=[
                 "Name",
                 "Quantity",
             ],
-            style=Pack(**self.styleBase),
+            data=[
+                ("Any", "♾️"),
+            ],
+            style=Pack(
+                **self.styleBase,
+                flex=1,
+            ),
         )
         ingredientsTab.add(self.ingredientsTable)
 
@@ -230,6 +238,7 @@ class Boxer(toga.App):
         self.commands.add(get_file)
         self.main_window = toga.MainWindow()
         self.main_window.content = container
+        self.adjustColumns()
         self.main_window.show()
 
 
