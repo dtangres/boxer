@@ -1,5 +1,6 @@
 import toga
 from toga.style.pack import ROW, COLUMN, Pack
+from toga.constants import BOLD
 from backend import read_reagents
 from gameInfo import (
     ingredientData,
@@ -22,6 +23,10 @@ class Boxer(toga.App):
     potionType = None
     potionTier = None
     starLevel = None
+
+    # Establish style base
+    fontPath = "../font/static"
+    styleBase = {"font_family": "Bitter", "font_size": 14, "font_weight": BOLD}
 
     # Set up ingredient loading
     async def file_select_handler(self, widget):
@@ -60,6 +65,10 @@ class Boxer(toga.App):
 
     # Build GUI
     def startup(self):
+        # Register font
+        toga.Font.register("Bitter", f"{self.fontPath}/Bitter-Regular.ttf")
+        toga.Font.register("Bitter", f"{self.fontPath}/Bitter-Bold.ttf", weight=BOLD)
+
         # Set up commands
         easy_commands = toga.Group("Commands")
         get_file = toga.Command(
@@ -78,7 +87,8 @@ class Boxer(toga.App):
             headings=[
                 "Name",
                 "Quantity",
-            ]
+            ],
+            style=Pack(**self.styleBase),
         )
         ingredientsTab.add(self.ingredientsTable)
 
@@ -90,7 +100,7 @@ class Boxer(toga.App):
         self.tierSelect = toga.Selection(
             items=filterStrings(PotionTier).values(),
             value=list(filterStrings(PotionTier).values())[0],
-            style=Pack(direction=COLUMN, width=200, padding=5),
+            style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
 
         self.starSlider = toga.Slider(
@@ -104,13 +114,13 @@ class Boxer(toga.App):
         self.potionTypeSelect = toga.Selection(
             items=filterStrings(PotionType).values(),
             value=list(filterStrings(PotionType).values())[0],
-            style=Pack(direction=COLUMN, width=200, padding=5),
+            style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
 
         self.cauldronSelect = toga.Selection(
             items=filterStrings(Cauldron).values(),
             value=list(filterStrings(Cauldron).values())[0],
-            style=Pack(direction=COLUMN, width=200, padding=5),
+            style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
 
         sensoryBox = toga.Box(
@@ -122,11 +132,12 @@ class Boxer(toga.App):
         )
         tasteSelectLabel = toga.Label(
             "Taste",
-            style=Pack(padding=5),
+            style=Pack(**self.styleBase, padding=5),
         )
         self.tasteSelectList = toga.Selection(
             items=["Any", "No Negative", "Positive"],
             value="Any",
+            style=Pack(**self.styleBase),
         )
         tasteSelectBox.add(tasteSelectLabel, self.tasteSelectList)
 
@@ -135,11 +146,12 @@ class Boxer(toga.App):
         )
         sensationSelectLabel = toga.Label(
             "Sensation",
-            style=Pack(padding=5),
+            style=Pack(**self.styleBase, padding=5),
         )
         self.sensationSelectList = toga.Selection(
             items=["Any", "No Negative", "Positive"],
             value="Any",
+            style=Pack(**self.styleBase),
         )
         sensationSelectBox.add(sensationSelectLabel, self.sensationSelectList)
 
@@ -148,11 +160,12 @@ class Boxer(toga.App):
         )
         aromaSelectLabel = toga.Label(
             "Aroma",
-            style=Pack(padding=5),
+            style=Pack(**self.styleBase, padding=5),
         )
         self.aromaSelectList = toga.Selection(
             items=["Any", "No Negative", "Positive"],
             value="Any",
+            style=Pack(**self.styleBase),
         )
         aromaSelectBox.add(aromaSelectLabel, self.aromaSelectList)
 
@@ -161,11 +174,12 @@ class Boxer(toga.App):
         )
         visualSelectLabel = toga.Label(
             "Visual",
-            style=Pack(padding=5),
+            style=Pack(**self.styleBase, padding=5),
         )
         self.visualSelectList = toga.Selection(
             items=["Any", "No Negative", "Positive"],
             value="Any",
+            style=Pack(**self.styleBase),
         )
         visualSelectBox.add(visualSelectLabel, self.visualSelectList)
 
@@ -174,11 +188,12 @@ class Boxer(toga.App):
         )
         soundSelectLabel = toga.Label(
             "Sound",
-            style=Pack(padding=5),
+            style=Pack(**self.styleBase, padding=5),
         )
         self.soundSelectList = toga.Selection(
             items=["Any", "No Negative", "Positive"],
             value="Any",
+            style=Pack(**self.styleBase),
         )
         soundSelectBox.add(soundSelectLabel, self.soundSelectList)
 
@@ -193,7 +208,7 @@ class Boxer(toga.App):
         calculateButton = toga.Button(
             "Calculate",
             on_press=self.calculatePotionRecipe,
-            style=Pack(direction=ROW, padding=5),
+            style=Pack(**self.styleBase, direction=ROW, padding=5),
         )
 
         calculationTab.add(
@@ -209,7 +224,8 @@ class Boxer(toga.App):
             content=[
                 ("Ingredients", ingredientsTab),
                 ("Calculation", calculationTab),
-            ]
+            ],
+            style=Pack(**self.styleBase),
         )
         self.commands.add(get_file)
         self.main_window = toga.MainWindow()
