@@ -1,6 +1,15 @@
 import toga
+from toga.style.pack import ROW, COLUMN, Pack
 from backend import read_reagents
-from gameInfo import ingredientData
+from gameInfo import (
+    ingredientData,
+    PotionTier,
+    PotionType,
+    Cauldron,
+    filterStrings,
+    englishToEnum,
+)
+from optimization import getOptimumPotionRecipe
 
 
 def button_handler(widget):
@@ -9,16 +18,21 @@ def button_handler(widget):
 
 class Boxer(toga.App):
     workingIngredientData = {}
+    cauldron = None
+    potionType = None
+    potionTier = None
+    starLevel = None
 
+    # Set up ingredient loading
     async def file_select_handler(self, widget):
         try:
             fname = await self.dialog(toga.OpenFileDialog("Open file with Toga"))
             if fname is not None:
-                workingIngredientData = read_reagents(fname)
+                self.workingIngredientData = read_reagents(fname)
                 self.ingredientsTable.data.clear()
                 tableRows = [
                     (ingredientData[k]["name"], v)
-                    for k, v in workingIngredientData.items()
+                    for k, v in self.workingIngredientData.items()
                 ][::-1]
                 for r in tableRows:
                     self.ingredientsTable.data.insert(0, r)
@@ -26,9 +40,27 @@ class Boxer(toga.App):
         except ValueError:
             pass
 
-    def startup(self):
-        box = toga.Box()
+    async def calculatePotionRecipe(self, widget):
+        print(self.workingIngredientData)
+        potionRecipe = getOptimumPotionRecipe(
+            ingredientInventory=self.workingIngredientData,
+            cauldron=self.cauldronSelect.value,
+            potionType=self.potionTypeSelect.value,
+            tier=self.tierSelect.value,
+            starLevel=self.starSlider.value,
+            sensoryData={
+                "taste": self.tasteSelectList.value,
+                "sensation": self.sensationSelectList.value,
+                "aroma": self.aromaSelectList.value,
+                "visual": self.visualSelectList.value,
+                "sound": self.soundSelectList.value,
+            },
+        )
+        print(potionRecipe)
 
+    # Build GUI
+    def startup(self):
+        # Set up commands
         easy_commands = toga.Group("Commands")
         get_file = toga.Command(
             self.file_select_handler,
@@ -38,25 +70,150 @@ class Boxer(toga.App):
             group=easy_commands,
         )
 
-        split = toga.SplitContainer()
-
-        ingredientsPanel = toga.Box()
+        # Set up ingredients tab
+        ingredientsTab = toga.Box(
+            style=Pack(direction=COLUMN, padding_top=50, padding=10)
+        )
         self.ingredientsTable = toga.Table(
             headings=[
                 "Name",
                 "Quantity",
             ]
         )
+        ingredientsTab.add(self.ingredientsTable)
 
-        box.add(ingredientsPanel)
+        # Set up calculation tab
+        calculationTab = toga.Box(
+            style=Pack(direction=COLUMN, padding_top=50, padding=10)
+        )
+        print(filterStrings(PotionTier))
+        self.tierSelect = toga.Selection(
+            items=filterStrings(PotionTier).values(),
+            value=list(filterStrings(PotionTier).values())[0],
+            style=Pack(direction=COLUMN, width=200, padding=5),
+        )
 
-        potionsPanel = toga.Box()
-        box.add(potionsPanel)
+        self.starSlider = toga.Slider(
+            min=0,
+            max=5,
+            value=0,
+            tick_count=6,
+            style=Pack(direction=COLUMN, width=200, padding=5),
+        )
 
+        self.potionTypeSelect = toga.Selection(
+            items=filterStrings(PotionType).values(),
+            value=list(filterStrings(PotionType).values())[0],
+            style=Pack(direction=COLUMN, width=200, padding=5),
+        )
+
+        self.cauldronSelect = toga.Selection(
+            items=filterStrings(Cauldron).values(),
+            value=list(filterStrings(Cauldron).values())[0],
+            style=Pack(direction=COLUMN, width=200, padding=5),
+        )
+
+        sensoryBox = toga.Box(
+            style=Pack(direction=ROW, padding=5),
+        )
+
+        tasteSelectBox = toga.Box(
+            style=Pack(direction=COLUMN, padding=5),
+        )
+        tasteSelectLabel = toga.Label(
+            "Taste",
+            style=Pack(padding=5),
+        )
+        self.tasteSelectList = toga.Selection(
+            items=["Any", "No Negative", "Positive"],
+            value="Any",
+        )
+        tasteSelectBox.add(tasteSelectLabel, self.tasteSelectList)
+
+        sensationSelectBox = toga.Box(
+            style=Pack(direction=COLUMN, padding=5),
+        )
+        sensationSelectLabel = toga.Label(
+            "Sensation",
+            style=Pack(padding=5),
+        )
+        self.sensationSelectList = toga.Selection(
+            items=["Any", "No Negative", "Positive"],
+            value="Any",
+        )
+        sensationSelectBox.add(sensationSelectLabel, self.sensationSelectList)
+
+        aromaSelectBox = toga.Box(
+            style=Pack(direction=COLUMN, padding=5),
+        )
+        aromaSelectLabel = toga.Label(
+            "Aroma",
+            style=Pack(padding=5),
+        )
+        self.aromaSelectList = toga.Selection(
+            items=["Any", "No Negative", "Positive"],
+            value="Any",
+        )
+        aromaSelectBox.add(aromaSelectLabel, self.aromaSelectList)
+
+        visualSelectBox = toga.Box(
+            style=Pack(direction=COLUMN, padding=5),
+        )
+        visualSelectLabel = toga.Label(
+            "Visual",
+            style=Pack(padding=5),
+        )
+        self.visualSelectList = toga.Selection(
+            items=["Any", "No Negative", "Positive"],
+            value="Any",
+        )
+        visualSelectBox.add(visualSelectLabel, self.visualSelectList)
+
+        soundSelectBox = toga.Box(
+            style=Pack(direction=COLUMN, padding=5),
+        )
+        soundSelectLabel = toga.Label(
+            "Sound",
+            style=Pack(padding=5),
+        )
+        self.soundSelectList = toga.Selection(
+            items=["Any", "No Negative", "Positive"],
+            value="Any",
+        )
+        soundSelectBox.add(soundSelectLabel, self.soundSelectList)
+
+        sensoryBox.add(
+            tasteSelectBox,
+            sensationSelectBox,
+            aromaSelectBox,
+            visualSelectBox,
+            soundSelectBox,
+        )
+
+        calculateButton = toga.Button(
+            "Calculate",
+            on_press=self.calculatePotionRecipe,
+            style=Pack(direction=ROW, padding=5),
+        )
+
+        calculationTab.add(
+            self.potionTypeSelect,
+            self.tierSelect,
+            self.starSlider,
+            self.cauldronSelect,
+            sensoryBox,
+            calculateButton,
+        )
+
+        container = toga.OptionContainer(
+            content=[
+                ("Ingredients", ingredientsTab),
+                ("Calculation", calculationTab),
+            ]
+        )
         self.commands.add(get_file)
-        split.content = [self.ingredientsTable, potionsPanel]
         self.main_window = toga.MainWindow()
-        self.main_window.content = split
+        self.main_window.content = container
         self.main_window.show()
 
 
