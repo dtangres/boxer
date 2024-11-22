@@ -13,16 +13,14 @@ from gameInfo import (
 from optimization import getOptimumPotionRecipe
 
 
-def button_handler(widget):
-    print("hello")
-
-
 class Boxer(toga.App):
     workingIngredientData = {}
     cauldron = None
     potionType = None
     potionTier = None
     starLevel = None
+
+    calculateButton = None
 
     # Establish style base
     fontPath = "../font/static"
@@ -46,6 +44,8 @@ class Boxer(toga.App):
             pass
 
     async def calculatePotionRecipe(self, widget):
+        self.calculateButton.text = "Calculating..."
+        self.calculateButton.enabled = False
         print(self.workingIngredientData)
         potionRecipe = getOptimumPotionRecipe(
             ingredientInventory=self.workingIngredientData,
@@ -84,6 +84,9 @@ class Boxer(toga.App):
 
         recipeOutputLabel.text = prettyRecipe
         recipeOutputWindow.show()
+
+        self.calculateButton.enabled = True
+        self.calculateButton.text = "Calculate"
 
     def prettyPrintPotionRecipe(self, potionRecipe):
         ingredientsList = [
@@ -259,7 +262,7 @@ class Boxer(toga.App):
         )
 
         # Calculation button
-        calculateButton = toga.Button(
+        self.calculateButton = toga.Button(
             "Calculate",
             on_press=self.calculatePotionRecipe,
             style=Pack(**self.styleBase, direction=ROW, padding=5),
@@ -271,7 +274,7 @@ class Boxer(toga.App):
             self.starSlider,
             self.cauldronSelect,
             sensoryBox,
-            calculateButton,
+            self.calculateButton,
         )
 
         container = toga.OptionContainer(
