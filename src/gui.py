@@ -8,7 +8,7 @@ from gameInfo import (
     PotionType,
     Cauldron,
     filterStrings,
-    englishToEnum,
+    enumToEnglish,
 )
 from optimization import getOptimumPotionRecipe
 
@@ -61,7 +61,47 @@ class Boxer(toga.App):
                 "sound": self.soundSelectList.value,
             },
         )
-        print(potionRecipe)
+        prettyRecipe = (
+            self.prettyPrintPotionRecipe(potionRecipe)
+            if potionRecipe
+            else "Sorry, no recipe found. Please recheck your inputs and try again."
+        )
+
+        # Set up recipe output window
+        recipeOutputLabel = toga.Label(
+            "Run Boxer to show a recipe here.",
+            style=Pack(**self.styleBase),
+        )
+
+        recipeOutputBox = toga.Box(
+            style=Pack(direction=COLUMN, padding=10),
+        )
+        recipeOutputBox.add(recipeOutputLabel)
+        recipeOutputWindow = toga.Window(
+            title="Recipe Output",
+        )
+        recipeOutputWindow.content = recipeOutputBox
+
+        recipeOutputLabel.text = prettyRecipe
+        recipeOutputWindow.show()
+
+    def prettyPrintPotionRecipe(self, potionRecipe):
+        ingredientsList = [
+            f"- {enumToEnglish[k]}: " + (f"x{v}" * (v > 0))
+            for k, v in potionRecipe["ingredients"].items()
+        ]
+        magiminsList = [
+            f"- {k}: {v if v else ''}" for k, v in potionRecipe["magimins"].items()
+        ]
+        outputStringArray = [
+            "Ingredients:",
+            "\n".join(ingredientsList),
+            "\nMagimins:",
+            "\n".join(magiminsList),
+            f"\nMinimum Stars: {potionRecipe['baseStars'] + potionRecipe['stabilityStars']}",
+            f"Ingredient cost: {potionRecipe['ingredientCosts']}",
+        ]
+        return "\n".join(outputStringArray)
 
     def adjustColumns(self):
         self.ingredientsTable._impl.native.get_Columns()[0].set_Width(-1)
@@ -104,13 +144,15 @@ class Boxer(toga.App):
         calculationTab = toga.Box(
             style=Pack(direction=COLUMN, padding_top=50, padding=10)
         )
+
+        # Tier Select
         print(filterStrings(PotionTier))
         self.tierSelect = toga.Selection(
             items=filterStrings(PotionTier).values(),
             value=list(filterStrings(PotionTier).values())[0],
             style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
-
+        # Star Select
         self.starSlider = toga.Slider(
             min=0,
             max=5,
@@ -119,18 +161,21 @@ class Boxer(toga.App):
             style=Pack(direction=COLUMN, width=200, padding=5),
         )
 
+        # Potion Select
         self.potionTypeSelect = toga.Selection(
             items=filterStrings(PotionType).values(),
             value=list(filterStrings(PotionType).values())[0],
             style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
 
+        # Cauldron Select
         self.cauldronSelect = toga.Selection(
             items=filterStrings(Cauldron).values(),
             value=list(filterStrings(Cauldron).values())[0],
             style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
 
+        # Sensory Select
         sensoryBox = toga.Box(
             style=Pack(direction=ROW, padding=5),
         )
@@ -213,6 +258,7 @@ class Boxer(toga.App):
             soundSelectBox,
         )
 
+        # Calculation button
         calculateButton = toga.Button(
             "Calculate",
             on_press=self.calculatePotionRecipe,
@@ -235,8 +281,10 @@ class Boxer(toga.App):
             ],
             style=Pack(**self.styleBase),
         )
-        self.commands.add(get_file)
+
+        # self.commands.add(get_file)
         self.main_window = toga.MainWindow()
+        self.main_window.toolbar.add(get_file)
         self.main_window.content = container
         self.adjustColumns()
         self.main_window.show()
