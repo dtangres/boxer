@@ -14,7 +14,7 @@ from pulp import (
 )
 
 from gameInfo import (
-    PotionIngredient,
+    PotionTier,
     PotionType,
     potionRatios,
     starRequirements,
@@ -27,6 +27,7 @@ from gameInfo import (
     AdventureLocation,
     englishToEnum,
 )
+from stringManip import titleEnumName
 
 M = 8000
 eenyminy = 0.00001
@@ -473,6 +474,8 @@ def getBestPotion(
         ]
         solution["stabilityStars"] = [2, 1, 0, -1][stabilityIndex]
         solution["totalStars"] = totalStars.value()
+        solution["baseTier"] = titleEnumName(PotionTier(totalStars.value() // 6).name)
+        solution["normalizedStars"] = int(totalStars.value() % 6)
         solution["ingredientsQuantity"] = ingredientQuantity.value()
         solution["basePotionPrice"] = basePotionPrice.value()
         solution["ingredientCosts"] = ingredientCosts.value()
