@@ -1,4 +1,5 @@
 from string import ascii_lowercase
+from re import sub as resub
 
 
 def normalizeName(name):
@@ -6,4 +7,6 @@ def normalizeName(name):
 
 
 def titleEnumName(name):
-    return name.replace("_", " ").title()
+    return resub(
+        r"( [iI]+)$", lambda x: x.group(0).upper(), name.replace("_", " ").title()
+    )
