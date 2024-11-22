@@ -101,6 +101,9 @@ class Boxer(toga.App):
             "\n".join(ingredientsList),
             "\nMagimins:",
             "\n".join(magiminsList),
+            f"Stability: {potionRecipe['percentStability']}"
+            + "%"
+            + f" ({potionRecipe['stabilityRank']})",
             f"\nMinimum Stars: {potionRecipe['baseStars'] + potionRecipe['stabilityStars']}",
             f"Ingredient cost: {potionRecipe['ingredientCosts']}",
         ]
