@@ -294,6 +294,7 @@ class Boxer(toga.App):
         self.main_window = toga.MainWindow()
         self.main_window.toolbar.add(get_file)
         self.main_window.content = container
+        self.icon = toga.Icon("../img/ui/coin.ico")
         self.adjustColumns()
         self.main_window.show()
 
