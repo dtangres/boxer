@@ -1,5 +1,4 @@
 from enum import Enum
-import pandas as pd
 from pulp import (
     LpVariable,
     LpProblem,
@@ -24,7 +23,6 @@ from gameInfo import (
     ingredientData,
     PotionStability,
     potionBasePrices,
-    AdventureLocation,
     englishToEnum,
 )
 from stringManip import titleEnumName
