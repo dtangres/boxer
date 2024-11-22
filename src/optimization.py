@@ -10,7 +10,7 @@ from pulp import (
     LpConstraintGE,
     LpStatus,
     lpSum,
-    listSolvers,
+    PULP_CBC_CMD,
 )
 
 from gameInfo import (
@@ -402,8 +402,8 @@ def getBestPotion(
         prob += ingredientQuantity == workingCauldron["maxIngredients"]
         prob += perfectStarBonus == 1
         prob += basePotionPrice * workingCauldron["maxIngredients"] - ingredientCosts
-    listSolvers(onlyAvailable=True)
-    prob.solve()
+    solver = PULP_CBC_CMD(msg=0)
+    prob.solve(solver)
     if LpStatus[prob.status] == "Optimal":
         solution = {}
         solution["ingredients"] = {
