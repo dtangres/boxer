@@ -90,7 +90,7 @@ class Boxer(toga.App):
 
     def prettyPrintPotionRecipe(self, potionRecipe):
         ingredientsList = [
-            f"- {enumToEnglish[k]}: " + (f"x{v}" * (v > 1))
+            f"- {enumToEnglish[k]}" + (f": x{v}" * (v > 1))
             for k, v in potionRecipe["ingredients"].items()
         ]
         magiminsList = [
