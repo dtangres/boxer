@@ -446,7 +446,9 @@ def getBestPotion(
         solution["deviance"] = totalDeviance.value()
         solution["stability"] = totalDeviance.value() / totalMagimins.value()
         solution["baseStars"] = sum(
-            ind * i for ind, i in enumerate(magiminStarVariables.values()) if i.value()
+            ind * i.value()
+            for ind, i in enumerate(magiminStarVariables.values())
+            if i.value()
         )
         stabilityIndex = sum(
             [
