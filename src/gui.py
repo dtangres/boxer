@@ -24,7 +24,7 @@ class Boxer(toga.App):
 
     # Establish style base
     fontPath = "../font/static"
-    styleBase = {"font_family": "Bitter", "font_size": 14, "font_weight": BOLD}
+    styleBase = {"font_family": "Bitter", "font_size": 10, "font_weight": BOLD}
 
     # Set up ingredient loading
     async def file_select_handler(self, widget):
