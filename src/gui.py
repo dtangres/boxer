@@ -183,6 +183,8 @@ class Boxer(toga.App):
             style=Pack(direction=ROW, padding=5),
         )
 
+        sensorySelectArray = ["Any", "No Bad", "Good"]
+
         tasteSelectBox = toga.Box(
             style=Pack(direction=COLUMN, padding=5),
         )
@@ -191,8 +193,8 @@ class Boxer(toga.App):
             style=Pack(**self.styleBase, padding=5),
         )
         self.tasteSelectList = toga.Selection(
-            items=["Any", "No Negative", "Positive"],
-            value="Any",
+            items=sensorySelectArray,
+            value=sensorySelectArray[0],
             style=Pack(**self.styleBase),
         )
         tasteSelectBox.add(tasteSelectLabel, self.tasteSelectList)
@@ -205,8 +207,8 @@ class Boxer(toga.App):
             style=Pack(**self.styleBase, padding=5),
         )
         self.sensationSelectList = toga.Selection(
-            items=["Any", "No Negative", "Positive"],
-            value="Any",
+            items=sensorySelectArray,
+            value=sensorySelectArray[0],
             style=Pack(**self.styleBase),
         )
         sensationSelectBox.add(sensationSelectLabel, self.sensationSelectList)
@@ -219,8 +221,8 @@ class Boxer(toga.App):
             style=Pack(**self.styleBase, padding=5),
         )
         self.aromaSelectList = toga.Selection(
-            items=["Any", "No Negative", "Positive"],
-            value="Any",
+            items=sensorySelectArray,
+            value=sensorySelectArray[0],
             style=Pack(**self.styleBase),
         )
         aromaSelectBox.add(aromaSelectLabel, self.aromaSelectList)
@@ -233,8 +235,8 @@ class Boxer(toga.App):
             style=Pack(**self.styleBase, padding=5),
         )
         self.visualSelectList = toga.Selection(
-            items=["Any", "No Negative", "Positive"],
-            value="Any",
+            items=sensorySelectArray,
+            value=sensorySelectArray[0],
             style=Pack(**self.styleBase),
         )
         visualSelectBox.add(visualSelectLabel, self.visualSelectList)
@@ -247,8 +249,8 @@ class Boxer(toga.App):
             style=Pack(**self.styleBase, padding=5),
         )
         self.soundSelectList = toga.Selection(
-            items=["Any", "No Negative", "Positive"],
-            value="Any",
+            items=sensorySelectArray,
+            value=sensorySelectArray[0],
             style=Pack(**self.styleBase),
         )
         soundSelectBox.add(soundSelectLabel, self.soundSelectList)

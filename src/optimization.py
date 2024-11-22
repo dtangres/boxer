@@ -514,8 +514,15 @@ def getOptimumPotionRecipe(
             SensoryType.SOUND: SensoryQuality.ANY,
         }
     else:
+        sensoryTranslate = dict(
+            zip(
+                ["Any", "No Bad", "Good"],
+                [SensoryQuality.ANY, SensoryQuality.NEUTRAL, SensoryQuality.POSITIVE],
+            )
+        )
         sensoryData = {
-            englishToEnum[k.title()]: englishToEnum[v] for k, v in sensoryData.items()
+            englishToEnum[k.title()]: sensoryTranslate[v]
+            for k, v in sensoryData.items()
         }
         print(sensoryData)
 
