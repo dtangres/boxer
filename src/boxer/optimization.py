@@ -12,7 +12,7 @@ from pulp import (
     PULP_CBC_CMD,
 )
 
-from gameInfo import (
+from boxer.gameInfo import (
     PotionTier,
     PotionType,
     potionRatios,
@@ -25,7 +25,7 @@ from gameInfo import (
     potionBasePrices,
     englishToEnum,
 )
-from stringManip import titleEnumName
+from boxer.stringManip import titleEnumName
 
 M = 8000
 eenyminy = 0.00001

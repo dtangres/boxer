@@ -1,8 +1,8 @@
 import toga
 from toga.style.pack import ROW, COLUMN, Pack
 from toga.constants import BOLD
-from backend import read_reagents
-from gameInfo import (
+from boxer.backend import read_reagents
+from boxer.gameInfo import (
     ingredientData,
     PotionTier,
     PotionType,
@@ -10,7 +10,7 @@ from gameInfo import (
     filterStrings,
     enumToEnglish,
 )
-from optimization import getOptimumPotionRecipe
+from boxer.optimization import getOptimumPotionRecipe
 
 
 class Boxer(toga.App):
@@ -23,7 +23,7 @@ class Boxer(toga.App):
     calculateButton = None
 
     # Establish style base
-    fontPath = "../font/static"
+    fontPath = "resources/font/static"
     styleBase = {"font_family": "Bitter", "font_size": 10, "font_weight": BOLD}
 
     # Set up ingredient loading
@@ -295,7 +295,7 @@ class Boxer(toga.App):
         self.main_window = toga.MainWindow()
         self.main_window.toolbar.add(get_file)
         self.main_window.content = container
-        self.icon = toga.Icon("../img/ui/coin.ico")
+        self.icon = toga.Icon("resources/img/ui/coin.ico")
         self.adjustColumns()
         self.main_window.show()
 

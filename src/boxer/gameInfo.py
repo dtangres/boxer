@@ -1,6 +1,6 @@
 from enum import Enum, IntEnum
 import pandas as pd
-from stringManip import normalizeName, titleEnumName
+from boxer.stringManip import normalizeName, titleEnumName
 
 
 class PotionTier(Enum):

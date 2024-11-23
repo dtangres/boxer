@@ -1,5 +1,5 @@
-from gameInfo import ingredientsNormalizedToProper
-from stringManip import normalizeName
+from boxer.gameInfo import ingredientsNormalizedToProper
+from boxer.stringManip import normalizeName
 
 
 def read_reagents(filename):
