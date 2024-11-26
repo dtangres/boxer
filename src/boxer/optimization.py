@@ -63,7 +63,7 @@ def assertProblemIsComplete(
     )
     testOrComplain(cauldron is not None, "You have to specify a cauldron to brew in!")
     testOrComplain(potionType is not None, "You have to specify a potion type to brew!")
-    print(potionType)
+    # print(potionType)
     testOrComplain(
         potionType in PotionType,
         "You have to specify a valid potion type to brew!",
@@ -529,7 +529,7 @@ def getOptimumPotionRecipe(
             englishToEnum[k.title()]: sensoryTranslate[v]
             for k, v in sensoryData.items()
         }
-        print(sensoryData)
+        # print(sensoryData)
 
     assertProblemIsComplete(
         ingredientInventory=ingredientInventory,

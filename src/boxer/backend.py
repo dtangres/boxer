@@ -3,11 +3,8 @@ from boxer.stringManip import normalizeName
 
 
 def read_reagents(filename):
-    """
-    Reads reagents from a save file and returns them as a list of dictionaries.
-    """
     output = {}
-    print("Collecting data...")
+    # print("Collecting data...")
     with open(filename, "rb") as infile:
         # Skip preamble
         infile.read(0x1F)

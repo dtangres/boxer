@@ -101,6 +101,7 @@ class Boxer(toga.App):
         recipeOutputWindow.content = recipeOutputBox
 
         recipeOutputLabel.text = prettyRecipe
+
         recipeOutputWindow.show()
 
         self.calculateButton.enabled = True
@@ -171,7 +172,7 @@ class Boxer(toga.App):
         )
 
         # Tier Select
-        print(filterStrings(PotionTier))
+        # print(filterStrings(PotionTier))
         self.tierSelect = toga.Selection(
             items=filterStrings(PotionTier).values(),
             value=list(filterStrings(PotionTier).values())[0],
