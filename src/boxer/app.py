@@ -19,6 +19,7 @@ class Boxer(toga.App):
     potionType = None
     potionTier = None
     starLevel = None
+    currentPotionRecipe = None
 
     calculateButton = None
 
@@ -26,28 +27,39 @@ class Boxer(toga.App):
     fontPath = "resources/font/static"
     styleBase = {"font_family": "Bitter", "font_size": 10, "font_weight": BOLD}
 
+    def brewPotion(self, widget):
+        for i, j in self.currentPotionRecipe["ingredients"].items():
+            self.workingIngredientData[i] -= j
+        self.refreshReagents()
+        widget.window.close()
+
+    # Refresh reagents table
+    def refreshReagents(self):
+        if self.workingIngredientData:
+            self.ingredientsTable.data.clear()
+            tableRows = [
+                (ingredientData[k]["name"], v)
+                for k, v in self.workingIngredientData.items()
+            ][::-1]
+            for r in tableRows:
+                self.ingredientsTable.data.insert(0, r)
+            self.adjustColumns()
+
     # Set up ingredient loading
     async def file_select_handler(self, widget):
         try:
             fname = await self.dialog(toga.OpenFileDialog("Open file with Toga"))
             if fname is not None:
                 self.workingIngredientData = read_reagents(fname)
-                self.ingredientsTable.data.clear()
-                tableRows = [
-                    (ingredientData[k]["name"], v)
-                    for k, v in self.workingIngredientData.items()
-                ][::-1]
-                for r in tableRows:
-                    self.ingredientsTable.data.insert(0, r)
-            self.adjustColumns()
+                self.refreshReagents()
         except ValueError:
             pass
 
     async def calculatePotionRecipe(self, widget):
         self.calculateButton.text = "Calculating..."
         self.calculateButton.enabled = False
-        print(self.workingIngredientData)
-        potionRecipe = getOptimumPotionRecipe(
+        # print(self.workingIngredientData)
+        self.currentPotionRecipe = getOptimumPotionRecipe(
             ingredientInventory=self.workingIngredientData,
             cauldron=self.cauldronSelect.value,
             potionType=self.potionTypeSelect.value,
@@ -62,8 +74,8 @@ class Boxer(toga.App):
             },
         )
         prettyRecipe = (
-            self.prettyPrintPotionRecipe(potionRecipe)
-            if potionRecipe
+            self.prettyPrintPotionRecipe(self.currentPotionRecipe)
+            if self.currentPotionRecipe
             else "Sorry, no recipe found. Please recheck your inputs and try again."
         )
 
@@ -73,10 +85,16 @@ class Boxer(toga.App):
             style=Pack(**self.styleBase),
         )
 
+        recipeBrewButton = toga.Button(
+            "Brew Recipe",
+            on_press=self.brewPotion,
+            style=Pack(**self.styleBase),
+        )
+
         recipeOutputBox = toga.Box(
             style=Pack(direction=COLUMN, padding=10),
         )
-        recipeOutputBox.add(recipeOutputLabel)
+        recipeOutputBox.add(recipeOutputLabel, recipeBrewButton)
         recipeOutputWindow = toga.Window(
             title="Recipe Output",
         )
