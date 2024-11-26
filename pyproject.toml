@@ -21,6 +21,8 @@ test_sources = [
 ]
 
 requires = [
+    "pandas",
+    "pulp",
 ]
 test_requires = [
     "pytest",
