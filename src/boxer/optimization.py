@@ -92,7 +92,7 @@ def getBestPotion(
     cauldron=None,
     potionType=None,
     objective=PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS,
-    stability=PotionStability.UNSTABLE,
+    minStability=PotionStability.UNSTABLE,
     starLevel=None,
     sensoryData=None,
 ):
@@ -357,6 +357,18 @@ def getBestPotion(
         perfectStarBonus + veryStableStarBonus + stableStarBonus + unstableStarPenalty
         == 1
     )
+
+    # Minimum stability requirement
+    if minStability == PotionStability.PERFECT:
+        prob += veryStableStarBonus == 0
+        prob += stableStarBonus == 0
+        prob += unstableStarPenalty == 0
+    elif minStability == PotionStability.VERY_STABLE:
+        prob += stableStarBonus == 0
+        prob += unstableStarPenalty == 0
+    elif minStability == PotionStability.STABLE:
+        prob += unstableStarPenalty == 0
+
     # Stability may not be less than 50%
     prob += totalDeviance <= totalMagimins * 0.5
 
@@ -396,10 +408,12 @@ def getBestPotion(
         prob += totalStars  # + ingredientQuantity / 2
     elif objective == PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS:
         prob += starsFromMagimins + starsFromStability >= starLevel
-        prob += ingredientCosts  # - basePotionPrice
+        prob += ingredientCosts - (M * ingredientQuantity)
     elif objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH:
         prob += ingredientQuantity == workingCauldron["maxIngredients"]
         prob += perfectStarBonus == 1
+        # Product of base potion price and the number of ingredients
+
         prob += basePotionPrice * workingCauldron["maxIngredients"] - ingredientCosts
     solver = PULP_CBC_CMD(msg=0)
     prob.solve(solver)
@@ -503,6 +517,7 @@ def getOptimumPotionRecipe(
     objective=PotionOptimizationObjective.CHEAPEST_FOR_GIVEN_STARS,
     starLevel=None,
     tier=None,
+    minStability=PotionStability.UNSTABLE,
     sensoryData=None,
 ):
     # Validate completeness of parameters
@@ -557,6 +572,7 @@ def getOptimumPotionRecipe(
             potionType=potionType,
             objective=objective,
             starLevel=starLevel,
+            minStability=minStability,
             sensoryData=sensoryData,
         )
     elif objective == PotionOptimizationObjective.MOST_PROFITABLE_BATCH:

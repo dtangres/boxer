@@ -13,10 +13,10 @@ class PotionTier(Enum):
 
 
 class PotionStability(Enum):
-    PERFECT = 0
-    VERY_STABLE = 0.1
-    STABLE = 0.3
-    UNSTABLE = 0.5
+    PERFECT = 3
+    VERY_STABLE = 2
+    STABLE = 1
+    UNSTABLE = 0
 
 
 # fmt: off

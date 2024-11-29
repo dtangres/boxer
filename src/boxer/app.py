@@ -6,6 +6,7 @@ from boxer.gameInfo import (
     ingredientData,
     PotionTier,
     PotionType,
+    PotionStability,
     Cauldron,
     filterStrings,
     enumToEnglish,
@@ -19,6 +20,7 @@ class Boxer(toga.App):
     potionType = None
     potionTier = None
     starLevel = None
+    starSliderLabel = None
     currentPotionRecipe = None
 
     calculateButton = None
@@ -45,6 +47,12 @@ class Boxer(toga.App):
                 self.ingredientsTable.data.insert(0, r)
             self.adjustColumns()
 
+    def starLabelCallback(self, widget):
+        self.starSliderLabel.text = f"Stars: {'⭐'*int(widget.value)}"
+
+    def qualityLabelCallback(self, widget):
+        self.qualitySliderLabel.text = enumToEnglish[PotionStability(int(widget.value))]
+
     # Set up ingredient loading
     async def file_select_handler(self, widget):
         try:
@@ -65,6 +73,7 @@ class Boxer(toga.App):
             potionType=self.potionTypeSelect.value,
             tier=self.tierSelect.value,
             starLevel=self.starSlider.value,
+            minStability=PotionStability(self.qualitySlider.value),
             sensoryData={
                 "taste": self.tasteSelectList.value,
                 "sensation": self.sensationSelectList.value,
@@ -178,14 +187,46 @@ class Boxer(toga.App):
             value=list(filterStrings(PotionTier).values())[0],
             style=Pack(**self.styleBase, direction=COLUMN, width=200, padding=5),
         )
+        # Star Select Box
+        starSelectBox = toga.Box(
+            style=Pack(direction=ROW, padding=5),
+        )
         # Star Select
         self.starSlider = toga.Slider(
             min=0,
             max=5,
             value=0,
             tick_count=6,
+            on_change=self.starLabelCallback,
             style=Pack(direction=COLUMN, width=200, padding=5),
         )
+        # Star Select Label
+        self.starSliderLabel = toga.Label(
+            "Stars: -",
+            style=Pack(**self.styleBase, padding=5),
+        )
+        starSelectBox.add(self.starSlider, self.starSliderLabel)
+
+        # Quality Select Box
+        qualitySelectBox = toga.Box(
+            style=Pack(direction=ROW, padding=5),
+        )
+        # Quality Select
+        self.qualitySlider = toga.Slider(
+            min=0,
+            max=3,
+            value=3,
+            tick_count=4,
+            on_change=self.qualityLabelCallback,
+            style=Pack(direction=COLUMN, width=200, padding=5),
+        )
+        # Quality Select Label
+        self.qualitySliderLabel = toga.Label(
+            enumToEnglish[PotionStability.PERFECT],
+            style=Pack(**self.styleBase, padding=5),
+        )
+
+        qualitySelectBox.add(self.qualitySlider, self.qualitySliderLabel)
 
         # Potion Select
         self.potionTypeSelect = toga.Selection(
@@ -296,7 +337,8 @@ class Boxer(toga.App):
         calculationTab.add(
             self.potionTypeSelect,
             self.tierSelect,
-            self.starSlider,
+            starSelectBox,
+            qualitySelectBox,
             self.cauldronSelect,
             sensoryBox,
             self.calculateButton,
