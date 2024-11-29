@@ -318,7 +318,7 @@ def getBestPotion(
 
     # Stable potions require between (10% and 30%] deviance
     lowerBound_stable = 0.1 + eenyminy
-    upperBound_stable = 0.30 - eenyminy
+    upperBound_stable = 0.30
     prob += stableStarLowerBoundProduct <= M * stableStarBonus
     prob += stableStarLowerBoundProduct <= totalMagimins * lowerBound_stable
     prob += stableStarLowerBoundProduct >= lowerBound_stable - M * (1 - stableStarBonus)
@@ -332,7 +332,7 @@ def getBestPotion(
     prob += stableStarBonus >= stableStarDummy0 + stableStarDummy1 - 1
 
     # Unstable potions require at most 50% deviance
-    lowerBound_unstable = 0.30
+    lowerBound_unstable = 0.30 + eenyminy
     upperBound_unstable = 0.5
     prob += unstableStarLowerBoundProduct <= M * unstableStarPenalty
     prob += unstableStarLowerBoundProduct <= totalMagimins * lowerBound_unstable
