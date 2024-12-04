@@ -1,2 +1,2 @@
 # boxer
- A command-line/GUI utility for planning potion recipes in Potionomics
+ A companion app for Potionomics: Masterwork Edition. Work in progress.
