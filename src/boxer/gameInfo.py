@@ -897,7 +897,9 @@ ingredientsNormalizedToProper["mossberry"] = PotionIngredient.MOSS_BERRIES
 ingredientsNormalizedToProper["phoenixtears"] = PotionIngredient.PHOENIX_TEAR
 ingredientsNormalizedToProper["silverstagantlers"] = PotionIngredient.SILVER_STAG_ANTLER
 ingredientsNormalizedToProper["charredonay"] = PotionIngredient.CHARREDONNAY
-
+ingredientsNormalizedToProper["nightmarepome"] = PotionIngredient.NIGHTMARE_POMME
+ingredientsNormalizedToProper["wendigoantlers"] = PotionIngredient.YETI_ANTLER
+ingredientsNormalizedToProper["dragontears"] = PotionIngredient.DRAGON_TEAR
 # print(ingredientsNormalizedToProper)
 
 
