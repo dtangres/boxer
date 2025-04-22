@@ -4645,4 +4645,4 @@ englishToEnum = {j: i for i, j in enumToEnglish.items()}
 
 
 def filterStrings(enumType):
-    return {i: j for i, j in enumToEnglish.items() if i in enumType}
+    return {i: j for i, j in enumToEnglish.items() if i.name in [*map(lambda x: x.name, enumType)]}
